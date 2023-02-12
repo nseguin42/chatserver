@@ -49,7 +49,7 @@ impl RepoStatement {
     }
 
     fn for_chat_repo(s: &ChatRepoStatement) -> Self {
-        let statement = s.to_string();
+        let statement = s.as_string();
         let types = s.get_types();
         Self::new(statement, types)
     }
@@ -63,7 +63,7 @@ enum ChatRepoStatement {
 }
 
 impl ChatRepoStatement {
-    fn to_string(&self) -> String {
+    fn as_string(&self) -> String {
         match self {
             ChatRepoStatement::Insert => "INSERT INTO chat_messages (text, channel, username, timestamp) VALUES ($1, $2, $3, $4) RETURNING *".to_string(),
             ChatRepoStatement::GetByChannel => "SELECT * FROM chat_messages WHERE channel = $1 ORDER BY timestamp DESC LIMIT $2".to_string(),
@@ -101,7 +101,7 @@ impl ChatMessageRepository {
 
     pub async fn connect(&mut self) -> Result<(), Error> {
         let (client, connection) =
-            tokio_postgres::connect(&self.connection_string.to_string(), NoTls).await?;
+            tokio_postgres::connect(&self.connection_string.as_string(), NoTls).await?;
 
         self.client = Some(client);
         self.prepare_statements().await?;
@@ -126,7 +126,7 @@ impl ChatMessageRepository {
             ChatRepoStatement::GetByUser,
         ]
         .iter()
-        .map(|s| RepoStatement::for_chat_repo(s))
+        .map(RepoStatement::for_chat_repo)
         .collect();
 
         // This is currently broken, causes indefinite hang.
@@ -151,7 +151,7 @@ impl ChatMessageRepository {
 
         let rows = client
             .query(
-                &ChatRepoStatement::GetByChannel.to_string(),
+                &ChatRepoStatement::GetByChannel.as_string(),
                 &[&channel, &num_to_get],
             )
             .await?;
@@ -166,7 +166,7 @@ impl ChatMessageRepository {
 
         client
             .execute(
-                &ChatRepoStatement::Insert.to_string(),
+                &ChatRepoStatement::Insert.as_string(),
                 &[
                     &message.text,
                     &message.channel,
@@ -183,7 +183,7 @@ impl ChatMessageRepository {
         let client = self.client.as_ref().unwrap();
 
         let rows = client
-            .query(&ChatRepoStatement::GetByUser.to_string(), &[&username])
+            .query(&ChatRepoStatement::GetByUser.as_string(), &[&username])
             .await?;
 
         let messages = from_rows(rows);

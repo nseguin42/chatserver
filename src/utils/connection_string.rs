@@ -46,8 +46,7 @@ impl Config {
                 .map(|x| x.to_string()),
             port: json
                 .get("port")
-                .and_then(|x| x.to_string().parse::<u16>().ok().map(|x| x.to_string()))
-                .map(|x| x.to_string()),
+                .and_then(|x| x.to_string().parse::<u16>().ok().map(|x| x.to_string())),
             connect_timeout: json
                 .get("connect_timeout")
                 .and_then(|x| x.as_str())
@@ -90,7 +89,7 @@ pub(crate) struct ConnectionString {
 }
 
 impl ConnectionString {
-    pub(crate) fn to_string(&self) -> String {
+    pub(crate) fn as_string(&self) -> String {
         let mut strings = Vec::new();
 
         strings.push(format!("user={}", self.user));
@@ -142,6 +141,6 @@ impl Default for ConnectionString {
 
 impl Display for ConnectionString {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self.as_string())
     }
 }
