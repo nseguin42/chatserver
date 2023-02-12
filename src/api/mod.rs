@@ -33,7 +33,7 @@ pub async fn index() -> impl Responder {
     "Main index"
 }
 
-pub(crate) async fn start(config: &Config) -> std::io::Result<()> {
+pub async fn start(config: &Config) -> std::io::Result<()> {
     let config = config.api().unwrap();
 
     HttpServer::new(|| {

@@ -82,14 +82,14 @@ impl ChatRepoStatement {
     }
 }
 
-pub(crate) struct ChatMessageRepository {
+pub struct ChatMessageRepository {
     connection_string: ConnectionString,
-    client: Option<Client>,
+    pub client: Option<Client>,
     statements: Vec<RepoStatement>,
 }
 
 impl ChatMessageRepository {
-    pub(crate) fn new(config: &Config) -> Result<Self, Error> {
+    pub fn new(config: &Config) -> Result<Self, Error> {
         let connection_string = config.db()?;
 
         Ok(Self {
@@ -99,7 +99,7 @@ impl ChatMessageRepository {
         })
     }
 
-    pub(crate) async fn connect(&mut self) -> Result<(), Error> {
+    pub async fn connect(&mut self) -> Result<(), Error> {
         let (client, connection) =
             tokio_postgres::connect(&self.connection_string.to_string(), NoTls).await?;
 
@@ -142,7 +142,7 @@ impl ChatMessageRepository {
         Ok(())
     }
 
-    pub(crate) async fn get_messages_from_channel(
+    pub async fn get_messages_from_channel(
         &self,
         channel: &str,
         num_to_get: i64,
@@ -161,7 +161,7 @@ impl ChatMessageRepository {
         Ok(messages)
     }
 
-    pub(crate) async fn add_message(&self, message: &ChatMessage) -> Result<(), Error> {
+    pub async fn add_message(&self, message: &ChatMessage) -> Result<(), Error> {
         let client = self.client.as_ref().unwrap();
 
         client
@@ -179,10 +179,7 @@ impl ChatMessageRepository {
         Ok(())
     }
 
-    pub(crate) async fn get_messages_by_user(
-        &self,
-        username: &str,
-    ) -> Result<Vec<ChatMessage>, Error> {
+    pub async fn get_messages_by_user(&self, username: &str) -> Result<Vec<ChatMessage>, Error> {
         let client = self.client.as_ref().unwrap();
 
         let rows = client
@@ -203,86 +200,4 @@ fn from_rows(rows: Vec<Row>) -> Vec<ChatMessage> {
     }
 
     messages
-}
-
-#[cfg(test)]
-mod tests {
-    use fake::{Fake, Faker};
-    use tokio::test;
-
-    use crate::config::Config;
-    use crate::models::chat_message::ChatMessage;
-
-    use super::*;
-
-    async fn setup() -> Result<ChatMessageRepository, Error> {
-        let config = Config::load("config.json").await?;
-
-        let mut repo = ChatMessageRepository::new(&config)?;
-        repo.connect().await?;
-
-        Ok(repo)
-    }
-
-    #[test]
-    async fn test_to_from_sql() -> Result<(), Error> {
-        let repo = setup().await?;
-        let message = Faker.fake::<ChatMessage>();
-
-        repo.add_message(&message).await?;
-        let client = repo.client.as_ref().unwrap();
-
-        let rows = client
-            .query(
-                "SELECT * FROM chat_messages WHERE channel = $1 AND username = $2 AND text = $3 AND timestamp = $4",
-                &[&message.channel, &message.username, &message.text, &message.timestamp],
-            )
-            .await?;
-
-        let messages = from_rows(rows);
-
-        assert_eq!(message, messages[0]);
-
-        Ok(())
-    }
-
-    #[test]
-    async fn test_add_message() -> Result<(), Error> {
-        let repo = setup().await?;
-        let message = Faker.fake::<ChatMessage>();
-        repo.add_message(&message).await?;
-
-        Ok(())
-    }
-
-    #[test]
-    async fn test_get_messages_from_channel() -> Result<(), Error> {
-        let repo = setup().await?;
-
-        for _ in 0..10 {
-            let message = Faker.fake::<ChatMessage>();
-            repo.add_message(&message).await?;
-        }
-
-        let messages = repo
-            .get_messages_from_channel("test_channel", 10)
-            .await
-            .unwrap();
-
-        assert_eq!(messages.len(), 10);
-
-        Ok(())
-    }
-
-    #[test]
-    async fn test_get_messages_from_user() -> Result<(), Error> {
-        let repo = setup().await?;
-        let message = Faker.fake::<ChatMessage>();
-        repo.add_message(&message).await?;
-        let messages = repo.get_messages_by_user(&message.username).await?;
-
-        assert_ne!(messages.len(), 0);
-
-        Ok(())
-    }
 }

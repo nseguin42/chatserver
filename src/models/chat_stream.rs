@@ -4,6 +4,7 @@ use std::task::{Context, Poll};
 use chrono::{DateTime, Utc};
 use futures::stream::Stream;
 use futures::StreamExt;
+use log::debug;
 
 use crate::models::chat_message::ChatMessage;
 

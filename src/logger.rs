@@ -1,4 +1,4 @@
-use log::LevelFilter;
+use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_builder;
 use serde_json::Value as JsonValue;
 
@@ -42,7 +42,7 @@ impl Config {
     }
 }
 
-pub(crate) fn setup_logger(config: &Config) -> Result<(), Error> {
+pub fn setup_logger(config: &Config) -> Result<(), Error> {
     let config = config.logger()?;
     let mut builder = formatted_builder();
     builder.filter(None, config.level).init();

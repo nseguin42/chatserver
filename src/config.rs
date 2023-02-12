@@ -8,7 +8,7 @@ use tokio::io::AsyncReadExt;
 use crate::error::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Config {
+pub struct Config {
     json: JsonValue,
 }
 
@@ -26,7 +26,7 @@ impl Config {
         Self::from_key(self.json, key)
     }
 
-    pub(crate) async fn load(path: &str) -> Result<Self, Error> {
+    pub async fn load(path: &str) -> Result<Self, Error> {
         let mut file = File::open(path).await?;
         let mut contents = String::new();
         file.read_to_string(&mut contents).await?;

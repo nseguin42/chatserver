@@ -17,7 +17,7 @@ mod server;
 mod utils;
 
 #[actix_rt::main]
-async fn main() -> () {
+pub async fn main() -> () {
     if let Err(err) = run().await {
         handle_error(err);
     }
