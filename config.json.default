@@ -1,0 +1,14 @@
+{
+  "logger": {
+    "level": "debug"
+  },
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "dbname": "twitch_chat",
+    "user": "chatserver"
+  },
+  "api": {
+    "address": "127.0.0.1:7314"
+  }
+}
