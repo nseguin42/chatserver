@@ -1,0 +1,38 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: install cargo tools
+        run: |
+          cargo install cargo-clippy
+          cargo install cargo-audit
+      - name: cargo build
+        run: cargo build --verbose
+      - name: cargo check
+        run: cargo check --verbose
+      - name: cargo format
+        run: cargo fmt --verbose -- --check
+      - name: cargo clippy
+        run: cargo clippy --verbose -- -A dead-code
+      - name: cargo build
+        run: cargo build --verbose
+      - name: cargo test --frozen -- --skip repo
+        run: cargo test --verbose
+      - name: cargo doc
+        run: cargo doc --verbose
+      - name: cargo audit
+        run: cargo audit
