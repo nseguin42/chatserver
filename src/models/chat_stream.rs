@@ -40,11 +40,11 @@ impl<'a> ChatStream<'a> {
         }
     }
 
-    pub(crate) async fn start(&self) -> () {
+    pub(crate) async fn start(&self) {
         debug!("Starting chat stream");
     }
 
-    pub(crate) async fn stop(&self) -> () {
+    pub(crate) async fn stop(&self) {
         debug!("Stopping chat stream");
     }
 

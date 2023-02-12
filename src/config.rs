@@ -30,7 +30,7 @@ impl Config {
         let mut file = File::open(path).await?;
         let mut contents = String::new();
         file.read_to_string(&mut contents).await?;
-        let json = serde_json::from_str(&*contents)?;
+        let json = serde_json::from_str(&contents)?;
         Ok(Self { json })
     }
 }
