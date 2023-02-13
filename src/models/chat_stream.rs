@@ -1,16 +1,16 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use chrono::{DateTime, Utc};
 use futures::stream::Stream;
 use futures::StreamExt;
 use log::debug;
+use time::OffsetDateTime;
 
 use crate::models::chat_message::ChatMessage;
 
 pub(crate) struct ChatStream<'a> {
-    pub(crate) created_at: DateTime<Utc>,
-    pub(crate) updated_at: DateTime<Utc>,
+    pub(crate) created_at: OffsetDateTime,
+    pub(crate) updated_at: OffsetDateTime,
     stream: Pin<Box<dyn Stream<Item = ChatMessage> + 'a>>,
 }
 
@@ -20,10 +20,12 @@ impl<'a> ChatStream<'a> {
         T: Stream<Item = ChatMessage> + Send + Sync + 'a,
     {
         let stream = Box::pin(stream);
+        let now = OffsetDateTime::now_local().unwrap();
+
         Self {
             stream,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: now,
+            updated_at: now,
         }
     }
 
@@ -33,10 +35,11 @@ impl<'a> ChatStream<'a> {
         F: FnMut(ChatMessage) -> ChatMessage + Send + Sync + 'a,
     {
         let stream = Box::pin(stream.map(adapter));
+        let now = OffsetDateTime::now_local().unwrap();
         Self {
             stream,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: now,
+            updated_at: now,
         }
     }
 
@@ -58,7 +61,7 @@ impl<'a> Stream for ChatStream<'a> {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let val = self.stream.as_mut().poll_next(cx);
-        self.updated_at = Utc::now();
+        self.updated_at = OffsetDateTime::now_local().unwrap();
         val
     }
 }

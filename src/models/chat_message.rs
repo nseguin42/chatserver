@@ -1,23 +1,20 @@
-use chrono::serde::ts_seconds::deserialize as from_ts;
-use chrono::serde::ts_seconds::serialize as to_ts;
-use chrono::{DateTime, Utc};
-use fake::{Dummy, Fake};
+use actix_web::cookie::time;
+use fake::{Dummy, Fake, Faker};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
-use tokio_postgres::types::{FromSql, ToSql};
+use time::OffsetDateTime;
 use tokio_postgres::Row;
 
-#[derive(Debug, Serialize, Deserialize, Dummy, FromSql, ToSql)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct ChatMessage {
     pub text: String,
     pub username: String,
     pub channel: String,
-    #[serde(deserialize_with = "from_ts")]
-    #[serde(serialize_with = "to_ts")]
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: OffsetDateTime,
 }
 
 impl ChatMessage {
-    pub fn new(text: String, username: String, channel: String, timestamp: DateTime<Utc>) -> Self {
+    pub fn new(text: String, username: String, channel: String, timestamp: OffsetDateTime) -> Self {
         ChatMessage {
             text,
             username,
@@ -38,13 +35,15 @@ impl From<Row> for ChatMessage {
     }
 }
 
-// PostgreSQL timestamp precision differs from chrono's
-// so we can't #[derive(PartialEq)] for ChatMessage
-impl PartialEq for ChatMessage {
-    fn eq(&self, other: &Self) -> bool {
-        self.text == other.text
-            && self.username == other.username
-            && self.channel == other.channel
-            && self.timestamp.timestamp_millis() == other.timestamp.timestamp_millis()
+impl Dummy<Faker> for ChatMessage {
+    fn dummy_with_rng<R: Rng + ?Sized>(_config: &Faker, rng: &mut R) -> Self {
+        let fake_timestamp = Faker.fake_with_rng::<u32, R>(rng).into();
+
+        Self {
+            text: Faker.fake_with_rng(rng),
+            username: Faker.fake_with_rng(rng),
+            channel: Faker.fake_with_rng(rng),
+            timestamp: OffsetDateTime::from_unix_timestamp(fake_timestamp).unwrap(),
+        }
     }
 }

@@ -44,6 +44,3 @@ impl From<tokio_postgres::Error> for Error {
         Error::DbError(err.to_string())
     }
 }
-
-const CONFIG_NOT_FOUND: &str = "Config file not found";
-const CONFIG_MISSING_KEY: &str = "Config key missing";
