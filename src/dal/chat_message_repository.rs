@@ -1,59 +1,14 @@
+use std::ops::Deref;
+
 use enum_iterator::Sequence;
-use tokio_postgres::types::Type;
 use tokio_postgres::{Client, NoTls, Row, Statement, ToStatement};
+use tokio_postgres::types::Type;
 
 use crate::config::Config;
 use crate::error::Error;
 use crate::models::chat_message::ChatMessage;
 use crate::utils::connection_string::ConnectionString;
-
-pub(crate) struct RepoStatement {
-    statement: String,
-    prepared: Option<Statement>,
-    types: Vec<Type>,
-}
-
-impl RepoStatement {
-    fn new(statement: String, types: Vec<Type>) -> Self {
-        Self {
-            statement,
-            types,
-            prepared: None,
-        }
-    }
-
-    pub(crate) async fn prepare(&mut self, client: &Client) -> Result<(), Error> {
-        let statement = client.prepare_typed(&self.statement, &self.types);
-
-        // Set a timeout for the statement preparation
-        let statement = tokio::time::timeout(std::time::Duration::from_secs(1), statement).await;
-
-        match statement {
-            Ok(statement) => {
-                self.prepared = Some(statement.unwrap());
-                Ok(())
-            }
-            Err(e) => Err(Error::DbError(format!(
-                "Failed to prepare statement {}, error: {}",
-                self.statement, e
-            )))?,
-        }
-    }
-
-    fn to_statement(&self) -> &dyn ToStatement {
-        let prepared = &self.prepared;
-        match prepared {
-            Some(x) => x,
-            None => &self.statement,
-        }
-    }
-
-    fn for_chat_repo(s: &ChatRepoStatement) -> Self {
-        let statement = s.as_string();
-        let types = s.get_types();
-        Self::new(statement, types)
-    }
-}
+use crate::utils::repo_statement::{RepoStatement, ToRepoStatement};
 
 #[derive(Debug, PartialEq, Sequence)]
 enum ChatRepoStatement {
@@ -62,7 +17,7 @@ enum ChatRepoStatement {
     GetByUser,
 }
 
-impl ChatRepoStatement {
+impl ToRepoStatement for ChatRepoStatement {
     fn as_string(&self) -> String {
         match self {
             ChatRepoStatement::Insert => "INSERT INTO chat_messages (text, channel, username, timestamp) VALUES ($1, $2, $3, $4) RETURNING *".to_string(),
@@ -87,6 +42,7 @@ pub struct ChatMessageRepository {
     pub client: Option<Client>,
     statements: Vec<RepoStatement>,
 }
+
 
 impl ChatMessageRepository {
     pub fn new(config: &Config) -> Result<Self, Error> {
@@ -125,9 +81,9 @@ impl ChatMessageRepository {
             ChatRepoStatement::GetByChannel,
             ChatRepoStatement::GetByUser,
         ]
-        .iter()
-        .map(RepoStatement::for_chat_repo)
-        .collect();
+            .iter()
+            .map(|s| RepoStatement::from(s as &dyn ToRepoStatement))
+            .collect();
 
         // This is currently broken, causes indefinite hang.
         /*
