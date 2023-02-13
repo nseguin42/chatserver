@@ -20,19 +20,19 @@ jobs:
         run: |
           rustup component add clippy
           cargo install cargo-audit
-      - name: cargo build
+      - name: cargo build --verbose
         run: cargo build --verbose
-      - name: cargo check
+      - name: cargo check --verbose
         run: cargo check --verbose
-      - name: cargo format
+      - name: cargo fmt --verbose -- --check
         run: cargo fmt --verbose -- --check
-      - name: cargo clippy
+      - name: cargo clippy --verbose -- -A dead-code
         run: cargo clippy --verbose -- -A dead-code
-      - name: cargo build
+      - name: cargo build --verbose
         run: cargo build --verbose
       - name: cargo test --frozen -- --skip repo
-        run: cargo test --verbose
-      - name: cargo doc
+        run: cargo test  --frozen -- --skip repo
+      - name: cargo doc --verbose
         run: cargo doc --verbose
       - name: cargo audit
         run: cargo audit
