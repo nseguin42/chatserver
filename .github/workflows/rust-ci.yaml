@@ -30,8 +30,8 @@ jobs:
         run: cargo clippy --verbose -- -A dead-code
       - name: cargo build --verbose
         run: cargo build --verbose
-      - name: cargo test --frozen -- --skip repo
-        run: cargo test  --frozen -- --skip repo
+      - name: cargo test -- --skip repo
+        run: cargo test -- --skip repo
       - name: cargo doc --verbose
         run: cargo doc --verbose
       - name: cargo audit
