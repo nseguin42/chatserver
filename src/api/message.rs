@@ -1,4 +1,4 @@
-use actix_web::{get, HttpResponse, post, Responder, web};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use log::error;
 
 use crate::models::chat_message::ChatMessage;
@@ -10,7 +10,10 @@ pub(crate) async fn message_index() -> impl Responder {
 }
 
 #[post("")]
-pub async fn message_post(data: web::Data<ServerState>, message: web::Json<ChatMessage>) -> impl Responder {
+pub async fn message_post(
+    data: web::Data<ServerState>,
+    message: web::Json<ChatMessage>,
+) -> impl Responder {
     let repo = &data.repo;
     let message = message.into_inner();
     repo.add_message(&message).await.unwrap_or_else(|err| {

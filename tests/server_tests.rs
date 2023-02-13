@@ -1,20 +1,19 @@
 mod server_tests {
     use std::sync::Arc;
 
-    use actix_web::{App, test, web};
     use actix_web::body::MessageBody;
     use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
     use actix_web::test::{init_service, TestRequest};
     use actix_web::web::Data;
-    use fake::{Fake, Faker};
-    use test_context::{AsyncTestContext, test_context};
-
+    use actix_web::{test, web, App};
     use chatserver::api::message::message_post;
     use chatserver::config::Config;
     use chatserver::dal::chat_message_repository::ChatMessageRepository;
     use chatserver::error::Error;
     use chatserver::models::chat_message::ChatMessage;
     use chatserver::server::server_state::ServerState;
+    use fake::{Fake, Faker};
+    use test_context::{test_context, AsyncTestContext};
 
     #[derive(Debug)]
     struct ServerTestContext {
@@ -43,10 +42,10 @@ mod server_tests {
     ) -> App<
         impl ServiceFactory<
             ServiceRequest,
-            Response=ServiceResponse<impl MessageBody>,
-            Config=(),
-            InitError=(),
-            Error=actix_web::Error,
+            Response = ServiceResponse<impl MessageBody>,
+            Config = (),
+            InitError = (),
+            Error = actix_web::Error,
         >,
     > {
         let mut repo = ChatMessageRepository::new(config).unwrap();
@@ -56,7 +55,6 @@ mod server_tests {
             repo: Arc::new(repo),
         }))
     }
-
 
     #[test_context(ServerTestContext)]
     #[test]

@@ -1,6 +1,6 @@
 use enum_iterator::Sequence;
-use tokio_postgres::{Client, NoTls, Row};
 use tokio_postgres::types::Type;
+use tokio_postgres::{Client, NoTls, Row};
 
 use crate::config::Config;
 use crate::error::Error;
@@ -79,17 +79,15 @@ impl ChatMessageRepository {
             ChatRepoStatement::GetByChannel,
             ChatRepoStatement::GetByUser,
         ]
-            .iter()
-            .map(|s| RepoStatement::from(s as &dyn ToRepoStatement))
-            .collect();
+        .iter()
+        .map(|s| RepoStatement::from(s as &dyn ToRepoStatement))
+        .collect();
 
         // This is currently broken, causes indefinite hang.
-        /*
-        for statement in statements.iter_mut() {
-            debug!("Preparing statement: {}", statement.statement);
-            statement.prepare(client).await?;
-        }
-         */
+        // for statement in statements.iter_mut() {
+        // debug!("Preparing statement: {}", statement.statement);
+        // statement.prepare(client).await?;
+        // }
 
         self.statements = statements;
 
@@ -159,12 +157,11 @@ fn from_rows(rows: Vec<Row>) -> Vec<ChatMessage> {
 #[cfg(test)]
 mod test {
     use fake::{Fake, Faker};
-    use test_context::{AsyncTestContext, test_context};
+    use test_context::{test_context, AsyncTestContext};
     use tokio::test;
 
-    use crate::models::chat_message::ChatMessage;
-
     use super::*;
+    use crate::models::chat_message::ChatMessage;
 
     struct ChatMessageRepoTestContext {
         config: Config,
@@ -178,10 +175,7 @@ mod test {
             let mut repo = ChatMessageRepository::new(&config).unwrap();
             repo.connect().await.unwrap();
 
-            ChatMessageRepoTestContext {
-                config,
-                repo,
-            }
+            ChatMessageRepoTestContext { config, repo }
         }
 
         async fn teardown(self) {}
@@ -204,7 +198,8 @@ mod test {
             ctx.repo.add_message(&message).await?;
         }
 
-        let messages = ctx.repo
+        let messages = ctx
+            .repo
             .get_messages_from_channel("test_channel", 10)
             .await
             .unwrap();

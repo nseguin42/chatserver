@@ -1,4 +1,5 @@
 use std::fmt::Display;
+
 use actix_web::cookie::time;
 use fake::{Dummy, Fake, Faker};
 use rand::Rng;
@@ -27,13 +28,7 @@ impl ChatMessage {
 
 impl Display for ChatMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[{}] {}: {}",
-            self.timestamp,
-            self.username,
-            self.text
-        )
+        write!(f, "[{}] {}: {}", self.timestamp, self.username, self.text)
     }
 }
 

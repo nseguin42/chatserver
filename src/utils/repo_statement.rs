@@ -1,6 +1,6 @@
 use std::fmt::Debug;
-use actix::ActorStreamExt;
 
+use actix::ActorStreamExt;
 use postgres_types::Type;
 use tokio_postgres::{Client, Statement, ToStatement};
 
