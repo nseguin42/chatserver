@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use actix::{Actor, StreamHandler};
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use actix_web::web::service;
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use log::info;
 
@@ -60,7 +60,7 @@ pub async fn start(config: &Config) -> Result<(), Error> {
                 web::scope("/channel")
                     .service(channel::channel_index)
                     .service(channel::channel_get)
-                    .service(channel::channel_get_count)
+                    .service(channel::channel_get_count),
             )
     })
     .bind(&api_config.address)?

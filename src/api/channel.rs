@@ -16,7 +16,10 @@ pub(crate) async fn channel_get_count(
     let (channel, count) = path.into_inner();
 
     let repo = &data.repo;
-    let messages = repo.get_messages_from_channel(&channel, count).await.unwrap();
+    let messages = repo
+        .get_messages_from_channel(&channel, count)
+        .await
+        .unwrap();
 
     HttpResponse::Ok().json(messages)
 }
@@ -30,7 +33,11 @@ pub(crate) async fn channel_get(
 
     let channel = path.into_inner();
     let repo = &data.repo;
-    let messages = repo.get_messages_from_channel(&channel, count).await.unwrap();
+    let messages = repo
+        .get_messages_from_channel(&channel, count)
+        .await
+        .unwrap();
 
     HttpResponse::Ok().json(messages)
 }
+

@@ -4,6 +4,7 @@ use crate::error::Error::Configuration;
 
 pub(crate) mod channel;
 pub mod message;
+mod tests;
 
 const ERR_CONFIG_NO_ADDRESS: &str = "No address specified in api config";
 
