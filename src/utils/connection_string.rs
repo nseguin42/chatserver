@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::config::Config;
 use crate::error::Error;
-use crate::error::Error::ConfigError;
+use crate::error::Error::Configuration;
 
 const ERR_CONFIG_NO_USER: &str = "No user specified in db config";
 const ERR_CONFIG_NO_HOST: &str = "No host specified in db config";
@@ -13,12 +13,12 @@ impl Config {
 
         let maybe_user: Result<String, Error> = match json.get("user") {
             Some(x) => Ok(x.as_str().unwrap().to_string()),
-            None => Err(ConfigError(ERR_CONFIG_NO_USER.to_string()))?,
+            None => Err(Configuration(ERR_CONFIG_NO_USER.to_string()))?,
         };
 
         let maybe_host: Result<String, Error> = match json.get("host") {
             Some(x) => Ok(x.as_str().unwrap().to_string()),
-            None => Err(ConfigError(ERR_CONFIG_NO_HOST.to_string()))?,
+            None => Err(Configuration(ERR_CONFIG_NO_HOST.to_string()))?,
         };
 
         Ok(ConnectionString {
@@ -71,6 +71,7 @@ impl Config {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct ConnectionString {
     user: String,
     host: String,

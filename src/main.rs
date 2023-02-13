@@ -31,9 +31,8 @@ fn handle_error(err: Error) {
 async fn run() -> Result<(), Error> {
     let config = Config::load("config.json").await?;
     logger::setup_logger(&config).expect("Could not initialize logger");
-    info!("Starting server");
 
-    api::start(&config).await?;
+    server::start(&config).await?;
 
     Ok(())
 }

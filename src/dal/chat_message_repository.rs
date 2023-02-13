@@ -1,7 +1,5 @@
-use std::ops::Deref;
-
 use enum_iterator::Sequence;
-use tokio_postgres::{Client, NoTls, Row, Statement, ToStatement};
+use tokio_postgres::{Client, NoTls, Row};
 use tokio_postgres::types::Type;
 
 use crate::config::Config;
@@ -37,12 +35,12 @@ impl ToRepoStatement for ChatRepoStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct ChatMessageRepository {
     connection_string: ConnectionString,
     pub client: Option<Client>,
     statements: Vec<RepoStatement>,
 }
-
 
 impl ChatMessageRepository {
     pub fn new(config: &Config) -> Result<Self, Error> {
@@ -161,39 +159,52 @@ fn from_rows(rows: Vec<Row>) -> Vec<ChatMessage> {
 #[cfg(test)]
 mod test {
     use fake::{Fake, Faker};
+    use test_context::{AsyncTestContext, test_context};
     use tokio::test;
 
     use crate::models::chat_message::ChatMessage;
 
     use super::*;
 
-    async fn setup() -> Result<ChatMessageRepository, Error> {
-        let config = Config::load("config.json").await?;
-        let mut repo = ChatMessageRepository::new(&config)?;
-        repo.connect().await?;
-
-        Ok(repo)
+    struct ChatMessageRepoTestContext {
+        config: Config,
+        repo: ChatMessageRepository,
     }
 
+    #[async_trait::async_trait]
+    impl AsyncTestContext for ChatMessageRepoTestContext {
+        async fn setup() -> ChatMessageRepoTestContext {
+            let config = Config::load("config.json").await.unwrap();
+            let mut repo = ChatMessageRepository::new(&config).unwrap();
+            repo.connect().await.unwrap();
+
+            ChatMessageRepoTestContext {
+                config,
+                repo,
+            }
+        }
+
+        async fn teardown(self) {}
+    }
+
+    #[test_context(ChatMessageRepoTestContext)]
     #[test]
-    async fn repo_add_message() -> Result<(), Error> {
-        let repo = setup().await?;
+    async fn repo_add_message(ctx: &ChatMessageRepoTestContext) -> Result<(), Error> {
         let message = Faker.fake::<ChatMessage>();
-        repo.add_message(&message).await?;
+        ctx.repo.add_message(&message).await?;
 
         Ok(())
     }
 
+    #[test_context(ChatMessageRepoTestContext)]
     #[test]
-    async fn repo_get_messages_from_channel() -> Result<(), Error> {
-        let repo = setup().await?;
-
+    async fn repo_get_messages_from_channel(ctx: &ChatMessageRepoTestContext) -> Result<(), Error> {
         for _ in 0..10 {
             let message = Faker.fake::<ChatMessage>();
-            repo.add_message(&message).await?;
+            ctx.repo.add_message(&message).await?;
         }
 
-        let messages = repo
+        let messages = ctx.repo
             .get_messages_from_channel("test_channel", 10)
             .await
             .unwrap();
@@ -203,12 +214,12 @@ mod test {
         Ok(())
     }
 
+    #[test_context(ChatMessageRepoTestContext)]
     #[test]
-    async fn repo_get_messages_from_user() -> Result<(), Error> {
-        let repo = setup().await?;
+    async fn repo_get_messages_from_user(ctx: &ChatMessageRepoTestContext) -> Result<(), Error> {
         let message = Faker.fake::<ChatMessage>();
-        repo.add_message(&message).await?;
-        let messages = repo.get_messages_by_user(&message.username).await?;
+        ctx.repo.add_message(&message).await?;
+        let messages = ctx.repo.get_messages_by_user(&message.username).await?;
 
         assert_ne!(messages.len(), 0);
 

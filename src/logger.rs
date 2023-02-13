@@ -4,7 +4,7 @@ use serde_json::Value as JsonValue;
 
 use crate::config::Config;
 use crate::error::Error;
-use crate::error::Error::ConfigError;
+use crate::error::Error::Configuration;
 
 const ERR_INVALID_LOG_LEVEL: &str = "Invalid log level";
 const ERR_NO_LOG_LEVEL: &str = "No log level";
@@ -26,7 +26,7 @@ impl Config {
     fn get_level(json: JsonValue) -> Result<LevelFilter, Error> {
         let val = json["level"]
             .as_str()
-            .ok_or(ConfigError(ERR_NO_LOG_LEVEL.to_string()))?;
+            .ok_or(Configuration(ERR_NO_LOG_LEVEL.to_string()))?;
 
         let maybe_match = match val {
             "trace" => LevelFilter::Trace,
@@ -35,7 +35,7 @@ impl Config {
             "warn" => LevelFilter::Warn,
             "error" => LevelFilter::Error,
             "off" => LevelFilter::Off,
-            _ => Err(ConfigError(ERR_INVALID_LOG_LEVEL.to_string()))?,
+            _ => Err(Configuration(ERR_INVALID_LOG_LEVEL.to_string()))?,
         };
 
         Ok(maybe_match)

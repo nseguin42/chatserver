@@ -1,3 +1,6 @@
+use std::fmt::Debug;
+use actix::ActorStreamExt;
+
 use postgres_types::Type;
 use tokio_postgres::{Client, Statement, ToStatement};
 
@@ -16,10 +19,21 @@ impl From<&dyn ToRepoStatement> for RepoStatement {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct RepoStatement {
     statement: String,
     prepared: Option<Statement>,
     types: Vec<Type>,
+}
+
+impl Debug for RepoStatement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RepoStatement")
+            .field("statement", &self.statement)
+            .field("types", &self.types)
+            .field("prepared", &self.prepared.is_some())
+            .finish()
+    }
 }
 
 impl RepoStatement {
@@ -42,7 +56,7 @@ impl RepoStatement {
                 self.prepared = Some(statement.unwrap());
                 Ok(())
             }
-            Err(e) => Err(Error::DbError(format!(
+            Err(e) => Err(Error::Db(format!(
                 "Failed to prepare statement {}, error: {}",
                 self.statement, e
             )))?,
